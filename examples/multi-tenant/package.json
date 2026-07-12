@@ -1,0 +1,18 @@
+{
+  "name": "chronicle-multi-tenant-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "migrate:up": "tsx run.ts up",
+    "migrate:status": "tsx run.ts status",
+    "migrate:baseline": "tsx run.ts baseline"
+  },
+  "dependencies": {
+    "@chronicle/core": "workspace:*",
+    "@chronicle/postgres": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0"
+  }
+}

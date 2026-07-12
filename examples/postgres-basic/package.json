@@ -1,0 +1,17 @@
+{
+  "name": "chronicle-postgres-basic-example",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "migration:status": "chronicle status",
+    "migration:plan": "chronicle plan",
+    "migration:up": "chronicle up",
+    "migration:down": "chronicle down"
+  },
+  "dependencies": {
+    "chronicle": "workspace:*",
+    "@chronicle/core": "workspace:*",
+    "@chronicle/postgres": "workspace:*"
+  }
+}

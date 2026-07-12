@@ -1,0 +1,38 @@
+{
+  "name": "chronicle",
+  "version": "0.1.0",
+  "description": "Command line interface for chronicle.",
+  "type": "module",
+  "bin": {
+    "chronicle": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --sourcemap --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@chronicle/core": "workspace:*",
+    "@chronicle/postgres": "workspace:*",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.7"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
