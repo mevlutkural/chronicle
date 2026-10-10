@@ -150,6 +150,26 @@ describe("config", () => {
     ).toThrow(InvalidConfigError);
   });
 
+  it.each(["statementTimeoutMs", "migrationTimeoutMs"] as const)(
+    "rejects non-finite %s values",
+    (field) => {
+      for (const value of [NaN, Infinity, -Infinity]) {
+        expect(() =>
+          validateConfig({ adapter, execution: { [field]: value } }, "/fake/path")
+        ).toThrow(InvalidConfigError);
+      }
+    }
+  );
+
+  it.each(["statementTimeoutMs", "migrationTimeoutMs"] as const)(
+    "accepts finite positive %s values",
+    (field) => {
+      expect(() =>
+        validateConfig({ adapter, execution: { [field]: 1 } }, "/fake/path")
+      ).not.toThrow();
+    }
+  );
+
   it("validateConfig does not throw for a valid full config", () => {
     const fullAdapter = {
       name: "fake",
