@@ -109,17 +109,19 @@ export function validateConfig(config: ChronicleConfig, filePath: string): void 
     if (
       config.execution.statementTimeoutMs !== undefined &&
       (typeof config.execution.statementTimeoutMs !== "number" ||
+        !Number.isFinite(config.execution.statementTimeoutMs) ||
         config.execution.statementTimeoutMs <= 0)
     ) {
-      errors.push("execution.statementTimeoutMs must be a positive number");
+      errors.push("execution.statementTimeoutMs must be a finite positive number");
     }
 
     if (
       config.execution.migrationTimeoutMs !== undefined &&
       (typeof config.execution.migrationTimeoutMs !== "number" ||
+        !Number.isFinite(config.execution.migrationTimeoutMs) ||
         config.execution.migrationTimeoutMs <= 0)
     ) {
-      errors.push("execution.migrationTimeoutMs must be a positive number");
+      errors.push("execution.migrationTimeoutMs must be a finite positive number");
     }
   }
 
