@@ -42,6 +42,26 @@ describe("PostgresAdapter", () => {
     expect(pool.client.queries.map((query) => query.sql)).toContain("ROLLBACK");
   });
 
+  it("uses execution-level statement timeout before adapter defaults", async () => {
+    const pool = new FakePool();
+    const adapter = new PostgresAdapter({
+      pool: pool as unknown as Pool,
+      statementTimeoutMs: 5_000
+    });
+
+    await adapter.transaction(async () => {}, { statementTimeoutMs: 1_500 });
+    await adapter.transaction(async () => {});
+
+    expect(pool.client.queries.map((query) => query.sql)).toEqual([
+      "BEGIN",
+      "SET LOCAL statement_timeout = 1500",
+      "COMMIT",
+      "BEGIN",
+      "SET LOCAL statement_timeout = 5000",
+      "COMMIT"
+    ]);
+  });
+
   it("acquires advisory locks, times out, and unlocks in finally", async () => {
     const pool = new FakePool();
     const adapter = new PostgresAdapter({
