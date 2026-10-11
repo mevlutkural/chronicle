@@ -1,7 +1,11 @@
 import { createHash } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
 import { Pool, type PoolClient, type PoolConfig } from "pg";
-import { MigrationLockTimeoutError, type DatabaseAdapter, type TransactionOptions } from "@chronicle/core";
+import {
+  MigrationLockTimeoutError,
+  type DatabaseAdapter,
+  type TransactionOptions
+} from "@chronicle/core";
 import { PostgresSchemaCompiler } from "./compiler.js";
 import { PostgresMigrationRepository } from "./repository.js";
 
