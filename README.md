@@ -83,7 +83,7 @@ export default defineConfig({
     preventProductionRollback: true,     // blocks rollback in NODE_ENV=production
   },
   execution: {
-    statementTimeoutMs: 30_000,          // per-statement PostgreSQL timeout
+    statementTimeoutMs: 30_000,          // overrides adapter default for transactional migrations
     migrationTimeoutMs: 300_000,         // per-migration wall-clock timeout
   },
 });
@@ -259,6 +259,8 @@ execution: {
   migrationTimeoutMs: 300_000,  // Wall-clock timeout per migration file
 }
 ```
+
+`execution.statementTimeoutMs` overrides the PostgreSQL adapter's `statementTimeoutMs` default for transactional migrations. Non-transactional migrations do not use `SET LOCAL`.
 
 ---
 
