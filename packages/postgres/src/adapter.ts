@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
 import { Pool, type PoolClient, type PoolConfig } from "pg";
-import { MigrationLockTimeoutError, type DatabaseAdapter } from "@chronicle/core";
+import { MigrationLockTimeoutError, type DatabaseAdapter, type TransactionOptions } from "@chronicle/core";
 import { PostgresSchemaCompiler } from "./compiler.js";
 import { PostgresMigrationRepository } from "./repository.js";
 
@@ -77,15 +77,20 @@ export class PostgresAdapter implements DatabaseAdapter {
     );
   }
 
-  async transaction<T>(callback: (session: PostgresSession) => Promise<T>): Promise<T> {
+  async transaction<T>(
+    callback: (session: PostgresSession) => Promise<T>,
+    options: TransactionOptions = {}
+  ): Promise<T> {
     const client = await this.#pool.connect();
 
     try {
       await client.query("BEGIN");
 
-      // SET LOCAL applies only within this transaction, so it is safe for pooled connections.
-      if (this.#statementTimeoutMs !== undefined) {
-        await client.query(`SET LOCAL statement_timeout = ${this.#statementTimeoutMs}`);
+      // Execution-level timeout overrides the adapter default for this transaction.
+      // SET LOCAL is scoped to this transaction, so it is safe for pooled connections.
+      const statementTimeoutMs = options.statementTimeoutMs ?? this.#statementTimeoutMs;
+      if (statementTimeoutMs !== undefined) {
+        await client.query(`SET LOCAL statement_timeout = ${statementTimeoutMs}`);
       }
 
       const result = await callback(new PostgresSession(client));
