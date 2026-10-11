@@ -19,7 +19,8 @@ import {
   type MigrationRepository,
   type QueryResult,
   type SchemaCommand,
-  type SqlStatement
+  type SqlStatement,
+  type TransactionOptions
 } from "../src/index.js";
 
 describe("Migrator", () => {
@@ -357,6 +358,22 @@ describe("Migrator", () => {
     await expect(migrator.up()).rejects.toThrow(MigrationTimeoutError);
   });
 
+  it("forwards execution statementTimeoutMs to transactional adapter calls", async () => {
+    const directory = await migrationDir({
+      "20260101000000_a.js": migrationModule("select a")
+    });
+    const adapter = new MemoryAdapter(new MemoryRepository());
+    const resolved = config(adapter, directory);
+    const migrator = new Migrator({
+      ...resolved,
+      execution: { ...resolved.execution, statementTimeoutMs: 1_500 }
+    });
+
+    await migrator.up();
+
+    expect(adapter.transactionOptions).toEqual([{ statementTimeoutMs: 1_500 }]);
+  });
+
   it("resolves statementTimeoutMs in ResolvedChronicleConfig.execution", () => {
     const adapter = new MemoryAdapter(new MemoryRepository());
     const resolved = resolveConfig({
@@ -461,6 +478,7 @@ class MemoryAdapter implements DatabaseAdapter, DatabaseSession {
   readonly executed: SqlStatement[] = [];
   readonly lockNames: string[] = [];
   transactionCalls = 0;
+  readonly transactionOptions: TransactionOptions[] = [];
 
   constructor(private readonly repository: MemoryRepository) {}
 
@@ -471,8 +489,12 @@ class MemoryAdapter implements DatabaseAdapter, DatabaseSession {
     return { rows: [], rowCount: 0 };
   }
 
-  async transaction<T>(callback: (session: DatabaseSession) => Promise<T>): Promise<T> {
+  async transaction<T>(
+    callback: (session: DatabaseSession) => Promise<T>,
+    options: TransactionOptions = {}
+  ): Promise<T> {
     this.transactionCalls += 1;
+    this.transactionOptions.push(options);
     return callback(this);
   }
 
