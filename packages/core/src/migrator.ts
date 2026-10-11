@@ -526,9 +526,13 @@ export class Migrator {
       }
     };
 
+    const statementTimeoutMs = this.config.execution.statementTimeoutMs;
     const migrationPromise = input.dryRun || !useTransaction
       ? callback(this.config.adapter)
-      : this.config.adapter.transaction(callback);
+      : this.config.adapter.transaction(
+          callback,
+          statementTimeoutMs === undefined ? {} : { statementTimeoutMs }
+        );
 
     if (this.config.execution.migrationTimeoutMs !== undefined) {
       const timeout = this.config.execution.migrationTimeoutMs;
