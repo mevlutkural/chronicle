@@ -42,13 +42,21 @@ export interface MigrationRepository {
   recordLog(entry: MigrationLogEntry): Promise<void>;
 }
 
+export interface TransactionOptions {
+  /** PostgreSQL statement timeout (ms), applied to this transaction when supported. */
+  readonly statementTimeoutMs?: number;
+}
+
 export interface DatabaseAdapter {
   readonly name: string;
   readonly dialect: string;
   execute<Row extends Record<string, unknown> = Record<string, unknown>>(
     statement: SqlStatement | string
   ): Promise<QueryResult<Row>>;
-  transaction<T>(callback: (session: DatabaseSession) => Promise<T>): Promise<T>;
+  transaction<T>(
+    callback: (session: DatabaseSession) => Promise<T>,
+    options?: TransactionOptions
+  ): Promise<T>;
   withLock<T>(lockName: string, callback: () => Promise<T>): Promise<T>;
   createRepository(): MigrationRepository;
   createSchemaCompiler(): SchemaCompiler;
