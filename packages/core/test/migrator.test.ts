@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdtemp, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   EventBus,
   Migrator,
@@ -356,6 +356,51 @@ describe("Migrator", () => {
     });
 
     await expect(migrator.up()).rejects.toThrow(MigrationTimeoutError);
+  });
+
+  it.each([
+    ["successful", false],
+    ["failed", true]
+  ] as const)("clears migration timeout timer after a %s migration", async (_outcome, fails) => {
+    const directory = await migrationDir({
+      "20260101000000_cleanup.js": fails
+        ? `export default { async up() { throw new Error("boom"); } };`
+        : migrationModule("select cleanup")
+    });
+    const adapter = new MemoryAdapter(new MemoryRepository());
+    const resolved = config(adapter, directory);
+    const migrator = new Migrator({
+      ...resolved,
+      execution: { ...resolved.execution, migrationTimeoutMs: 60_000 }
+    });
+
+    const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
+    const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
+
+    try {
+      if (fails) {
+        await expect(migrator.up()).rejects.toThrow("boom");
+      } else {
+        await expect(migrator.up()).resolves.toMatchObject({
+          executions: [{ direction: "up" }]
+        });
+      }
+
+      const index = setTimeoutSpy.mock.calls.findIndex(([, delay]) => delay === 60_000);
+      expect(index).toBeGreaterThanOrEqual(0);
+      const handle = setTimeoutSpy.mock.results[index]?.value;
+      expect(handle).toBeDefined();
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(handle);
+    } finally {
+      // Clean up even if the assertion fails against the old implementation.
+      const index = setTimeoutSpy.mock.calls.findIndex(([, delay]) => delay === 60_000);
+      if (index >= 0) {
+        const handle = setTimeoutSpy.mock.results[index]?.value;
+        clearTimeout(handle);
+      }
+      setTimeoutSpy.mockRestore();
+      clearTimeoutSpy.mockRestore();
+    }
   });
 
   it("forwards execution statementTimeoutMs to transactional adapter calls", async () => {
