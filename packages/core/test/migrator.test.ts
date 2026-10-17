@@ -388,18 +388,14 @@ describe("Migrator", () => {
 
       const index = setTimeoutSpy.mock.calls.findIndex(([, delay]) => delay === 60_000);
       expect(index).toBeGreaterThanOrEqual(0);
-      const handle = setTimeoutSpy.mock.results[index]?.value as
-        | ReturnType<typeof setTimeout>
-        | undefined;
+      const handle = setTimeoutSpy.mock.results[index]?.value;
       expect(handle).toBeDefined();
       expect(clearTimeoutSpy).toHaveBeenCalledWith(handle);
     } finally {
       // Clean up even if the assertion fails against the old implementation.
       const index = setTimeoutSpy.mock.calls.findIndex(([, delay]) => delay === 60_000);
       if (index >= 0) {
-        const handle = setTimeoutSpy.mock.results[index]?.value as
-          | ReturnType<typeof setTimeout>
-          | undefined;
+        const handle = setTimeoutSpy.mock.results[index]?.value;
         clearTimeout(handle);
       }
       setTimeoutSpy.mockRestore();
