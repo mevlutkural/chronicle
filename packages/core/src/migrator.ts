@@ -536,8 +536,9 @@ export class Migrator {
 
     if (this.config.execution.migrationTimeoutMs !== undefined) {
       const timeout = this.config.execution.migrationTimeoutMs;
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(
+      let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutHandle = setTimeout(
           () =>
             reject(
               new MigrationTimeoutError(
@@ -545,9 +546,14 @@ export class Migrator {
               )
             ),
           timeout
-        )
-      );
-      await Promise.race([migrationPromise, timeoutPromise]);
+        );
+      });
+
+      try {
+        await Promise.race([migrationPromise, timeoutPromise]);
+      } finally {
+        clearTimeout(timeoutHandle);
+      }
     } else {
       await migrationPromise;
     }
