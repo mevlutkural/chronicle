@@ -364,7 +364,7 @@ describe("Migrator", () => {
   ] as const)("clears migration timeout timer after a %s migration", async (_outcome, fails) => {
     const directory = await migrationDir({
       "20260101000000_cleanup.js": fails
-        ? 'export default { async up() { throw new Error("boom"); } };'
+        ? `export default { async up() { throw new Error("boom"); } };`
         : migrationModule("select cleanup")
     });
     const adapter = new MemoryAdapter(new MemoryRepository());
